@@ -1,0 +1,25 @@
+# transaction_model.py
+
+from dataclasses import dataclass
+
+@dataclass
+class Transaction:
+    """定义一笔交易记录的数据结构"""
+    id: int = 0         # 唯一标识符
+    date: str           # 日期 (格式如 'YYYY-MM-DD')
+    amount: float       # 金额 (支出为负数，收入为正数)
+    type: str           # '收入' 或 '支出'
+    category: str       # 分类 (例如: '食物', '工资', '交通')
+    description: str    # 描述/备注
+
+    def to_dict(self):
+        """将 Transaction 对象转换为字典，便于写入 CSV"""
+        return self.__dict__
+
+    @classmethod
+    def from_dict(cls, data: dict):
+        """从字典创建 Transaction 对象，便于从 CSV 读取"""
+        # 注意: CSV 读取的数据是字符串，这里需要转换类型
+        data['id'] = int(data['id'])
+        data['amount'] = float(data['amount'])
+        return cls(**data)
