@@ -1,0 +1,81 @@
+# data_manager.py
+
+import csv
+from transaction_model import Transaction
+
+DATA_FILE = 'transactions.csv'
+
+def save_transaction(transaction: Transaction):
+    """将一笔交易记录追加到CSV文件中"""
+    
+    # 检查文件是否存在，决定是否写入表头
+    file_exists = False
+    try:
+        with open(DATA_FILE, 'r') as f:
+            file_exists = True
+    except FileNotFoundError:
+        pass
+
+    with open(DATA_FILE, 'a', newline='', encoding='utf-8') as file:
+        fieldnames = ['id', 'date', 'amount', 'type', 'category', 'description']
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+        
+        # 如果文件不存在，则写入表头
+        if not file_exists:
+            writer.writeheader()
+        
+        writer.writerow(transaction.to_dict())
+        print(f"✅ 交易记录已保存: {transaction.description}")
+
+
+def load_transactions() -> list[Transaction]:
+    """从CSV文件加载所有交易记录并返回列表"""
+    transactions = []
+    try:
+        with open(DATA_FILE, 'r', encoding='utf-8') as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                transactions.append(Transaction.from_dict(row))
+    except FileNotFoundError:
+        print(f"⚠️ 提示：文件 {DATA_FILE} 不存在，返回空列表。")
+        pass 
+        
+    return transactions
+
+
+def calculate_total_balance() -> float:
+    """计算所有交易记录的总余额"""
+    all_transactions = load_transactions()
+    total_balance = sum(t.amount for t in all_transactions)
+    return total_balance
+
+
+# ----------------------------------------------------------------------
+# 测试/运行代码块
+# ----------------------------------------------------------------------
+if __name__ == '__main__':
+    # 1. 模拟并保存交易
+    print("--- 1. 正在保存测试数据 ---")
+    
+    # 清空文件 (方便测试时重新开始)
+    open(DATA_FILE, 'w').close()
+
+    # 模拟两笔支出和一笔收入
+    expense_1 = Transaction(id=1, date="2025-12-09", amount=-35.50, type="支出", category="食物", description="咖啡和面包")
+    expense_2 = Transaction(id=2, date="2025-12-09", amount=-150.00, type="支出", category="交通", description="地铁卡充值")
+    income = Transaction(id=3, date="2025-12-09", amount=5000.00, type="收入", category="工资", description="月薪")
+    
+    save_transaction(expense_1)
+    save_transaction(expense_2)
+    save_transaction(income)
+    
+    # 2. 读取所有交易并打印
+    print("\n--- 2. 读取所有交易 ---")
+    all_transactions = load_transactions()
+    for t in all_transactions:
+        print(f"| ID: {t.id}, 日期: {t.date}, 金额: {t.amount}, 分类: {t.category}")
+
+    # 3. 计算总余额
+    print("\n--- 3. 计算当前总余额 ---")
+    current_balance = calculate_total_balance()
+    print(f"💰 **当前总余额是: {current_balance:.2f} 元**")
